@@ -55,4 +55,3 @@ jobs:
           title: "AI: automated code improvements"
           body: ${{ steps.assess.outputs.prBody }}
           base: ${{ github.head_ref || github.ref_name }}
-          branch: ai/code-improve-${{ github.run_id }}
