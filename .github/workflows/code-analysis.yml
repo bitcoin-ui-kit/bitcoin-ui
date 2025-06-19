@@ -1,0 +1,47 @@
+
+# This workflow is used to run the OpenAgentic assessment on the codebase.
+# It creates a pull request with the changes made by the OpenAgentic assessment.
+
+name: AI-Code-Analysis
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  ai-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+
+      - run: npm ci
+
+      - name: Run OpenAgentic assessment
+        id: assess
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAGENTIC_API_KEY: ${{ secrets.OPENAGENTIC_API_KEY }}
+        run: |
+          node scripts/run-code-assessment.js
+
+      - name: Apply patches
+        if: steps.assess.outputs.hadChanges == 'true'
+        run: |
+          echo "$PATCHES" | git apply --whitespace=fix
+        env:
+          PATCHES: ${{ steps.assess.outputs.patchString }}
+
+      - name: Commit & PR
+        if: steps.assess.outputs.hadChanges == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ai/code-improve-${{ github.run_id }}
+          title: "AI: automated code improvements"
+          body: ${{ steps.assess.outputs.prBody }}
