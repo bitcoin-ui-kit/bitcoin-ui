@@ -4,25 +4,35 @@
 
 name: AI-Code-Analysis
 
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
 on:
   pull_request:
     branches: [ "main" ]
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   ai-pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
           node-version: 22.7
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
 
       - name: Run OpenAgentic assessment
         id: assess
