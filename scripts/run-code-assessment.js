@@ -14,8 +14,12 @@ async function runAssessment() {
     "diff --git a/README.md b/README.md",
     "--- a/README.md",
     "+++ b/README.md",
-    "@@ -538,1 +538,0 @@",
+    "@@ -535,5 +535,4 @@ MIT © [Bitcoin UI](LICENSE)",
+    " - [Bitcoin Design Guide](https://bitcoin.design/guide/)",
+    " - [Bitcoin Universal Design Accessibility Standards](https://jason-me.github.io/bitcoin-universal-design/)",
+    " - [GitHub Repository](https://github.com/bitcoin-ui/bitcoin-ui)",
     "-- [Component Examples](src/example.tsx)",
+    " - [Contributing Guidelines](CONTRIBUTING.md)",
   ]
   const patch = patchLines.join("\n")
 
