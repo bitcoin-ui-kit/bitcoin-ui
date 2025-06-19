@@ -10,12 +10,14 @@ import process from "node:process"
  *  • a short, friendly PR body
  */
 async function runAssessment() {
-  const patch = `diff --git a/README.md b/README.md
-index 1234567..abcdefg 100644
---- a/README.md
-+++ b/README.md
-@@ -538,1 +538,0 @@
-- - [Component Examples](src/example.tsx)`
+  const patchLines = [
+    "diff --git a/README.md b/README.md",
+    "--- a/README.md",
+    "+++ b/README.md",
+    "@@ -538,1 +538,0 @@",
+    "-- [Component Examples](src/example.tsx)",
+  ]
+  const patch = patchLines.join("\n")
 
   return {
     changes: [{ path: "README.md", patch }],
