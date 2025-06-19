@@ -51,21 +51,21 @@ You can customize components using:
 ## 🚀 Getting Started
 
 ```tsx
-import { Secret, PasswordInput, QRCode } from 'bitcoin-ui'
+import { PasswordInput, QRCode, Secret } from "bitcoin-ui"
 
 function App() {
   return (
     <div>
-      <Secret 
+      <Secret
         secret="abandon ability able about above absent absorb"
         label="Seed Phrase"
       />
-      
+
       <PasswordInput
         label="Wallet Password"
         placeholder="Enter your password"
       />
-      
+
       <QRCode
         value="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
         label="Bitcoin Address QR"
@@ -92,4 +92,4 @@ All components follow [Bitcoin Universal Design Accessibility Standards](https:/
 
 ---
 
-**💡 Tip:** Use the Controls panel below each story to experiment with different props and see how components behave in various configurations. 
+**💡 Tip:** Use the Controls panel below each story to experiment with different props and see how components behave in various configurations.

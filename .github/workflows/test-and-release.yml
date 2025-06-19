@@ -54,8 +54,8 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm changeset publish
-          title: "Release ${{env.CHANGED_PACKAGES}}"
-          commit: "Release ${{env.CHANGED_PACKAGES}}"
+          title: "fix(code-review): ${{env.CHANGED_PACKAGES}}"
+          commit: "fix ${{env.CHANGED_PACKAGES}}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

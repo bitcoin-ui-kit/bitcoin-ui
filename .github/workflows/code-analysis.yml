@@ -1,8 +1,12 @@
-
 # This workflow is used to run the OpenAgentic assessment on the codebase.
 # It creates a pull request with the changes made by the OpenAgentic assessment.
 
 name: AI-Code-Analysis
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
 
 on:
   pull_request:
@@ -11,16 +15,21 @@ on:
 jobs:
   ai-pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with: { node-version: '18' }
+      - name: Enable corepack
+        run: corepack enable
 
-      - run: npm ci
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.7
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
 
       - name: Run OpenAgentic assessment
         id: assess
@@ -45,3 +54,4 @@ jobs:
           branch: ai/code-improve-${{ github.run_id }}
           title: "AI: automated code improvements"
           body: ${{ steps.assess.outputs.prBody }}
+          base: ${{ github.head_ref || github.ref_name }}
