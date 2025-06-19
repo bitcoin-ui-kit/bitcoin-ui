@@ -1,6 +1,9 @@
 // scripts/run-assessment.js
 // Mock version for local testing & CI dry-runs
 
+import fs from "node:fs"
+import process from "node:process"
+
 /**
  * Pretend AI assessment that always returns:
  *  • one diff (README cleanup)
@@ -27,8 +30,6 @@ index 1234567..abcdefg 100644
   const { changes, hadChanges, prBody } = await runAssessment()
 
   // Write outputs to GitHub Actions environment file
-  const fs = require("node:fs")
-  const process = require("node:process")
   const githubOutput = process.env.GITHUB_OUTPUT
 
   if (githubOutput) {
