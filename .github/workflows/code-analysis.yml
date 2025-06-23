@@ -48,7 +48,25 @@ jobs:
       - name: Apply patches
         if: steps.assess.outputs.hadChanges == 'true'
         run: |
-          echo "$PATCHES" | git apply --whitespace=fix
+          echo "Applying patches..."
+          if [ -z "$PATCHES" ]; then
+            echo "Error: No patch content provided"
+            exit 1
+          fi
+          
+          # Write patch to temporary file for better debugging
+          echo "$PATCHES" > /tmp/patch.diff
+          echo "Patch content preview:"
+          head -20 /tmp/patch.diff
+          
+          # Apply the patch
+          git apply --verbose --whitespace=fix /tmp/patch.diff || {
+            echo "Failed to apply patch. Patch content:"
+            cat /tmp/patch.diff
+            echo "Git status:"
+            git status
+            exit 1
+          }
         env:
           PATCHES: ${{ steps.assess.outputs.patchString }}
 
