@@ -48,7 +48,15 @@ function cleanPatch(patch) {
       return null
     }
 
+    // Check for truncation by looking for incomplete lines
+    const lastLine = cleanedLines[cleanedLines.length - 1]
+    if (lastLine && !lastLine.match(/^[@ +-]/) && lastLine.length > 0 && !lastLine.includes("\\")) {
+      console.warn("Patch appears to be truncated (incomplete last line):", lastLine)
+      return null
+    }
+
     console.log("Patch validated and cleaned successfully")
+    console.log(`Patch size: ${cleanedPatch.length} characters, ${lines.length} lines`)
     console.log(`Patch preview (first 500 chars):\n${cleanedPatch.substring(0, 500)}...`)
 
     return cleanedPatch
@@ -119,12 +127,14 @@ async function runAssessment() {
     const githubOutput = process.env.GITHUB_OUTPUT
 
     if (githubOutput) {
-      // Only write patch if we have valid changes
-      if (hadChanges && patch) {
-        fs.appendFileSync(githubOutput, `patchString<<EOF\n${patch}\nEOF\n`)
-      }
-
       fs.appendFileSync(githubOutput, `hadChanges=${hadChanges}\n`)
+
+      // Always write patch to file for consistency and reliability
+      if (hadChanges && patch) {
+        console.log(`Writing patch to file (${patch.length} chars)`)
+        fs.writeFileSync("/tmp/assessment.patch", patch)
+        fs.appendFileSync(githubOutput, `patchFile=/tmp/assessment.patch\n`)
+      }
 
       if (prBody) {
         fs.appendFileSync(githubOutput, `prBody<<EOF\n${prBody}\nEOF\n`)
@@ -133,7 +143,9 @@ async function runAssessment() {
       // Fallback for local testing
       console.log("hadChanges:", hadChanges)
       if (hadChanges && patch) {
-        console.log("patchString:", patch)
+        console.log(`Writing patch to file for local testing (${patch.length} chars)`)
+        fs.writeFileSync("/tmp/assessment.patch", patch)
+        console.log("Patch written to: /tmp/assessment.patch")
       }
       if (prBody) {
         console.log("prBody:", prBody)
