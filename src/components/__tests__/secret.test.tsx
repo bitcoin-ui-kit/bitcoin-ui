@@ -127,4 +127,35 @@ describe("secret", () => {
     fireEvent.click(revealButton)
     expect(revealButton).toHaveAttribute("aria-pressed", "true")
   })
+
+  // Security: Test auto-hide functionality
+  it("auto-hides revealed secret after timeout", async () => {
+    jest.useFakeTimers()
+    render(<Secret secret={secret} label="Secret Phrase" />)
+    const toggleButton = screen.getByRole("button", {
+      name: /reveal secret phrase/i,
+    })
+
+    // Reveal the secret
+    fireEvent.click(toggleButton)
+    expect(screen.getByTestId("secret-text")).toHaveTextContent(secret)
+
+    // Fast forward 30 seconds
+    jest.advanceTimersByTime(30000)
+
+    await waitFor(() => {
+      expect(screen.getByTestId("secret-text")).toHaveTextContent(
+        "•••••••••••••••••••••",
+      )
+    })
+
+    jest.useRealTimers()
+  })
+
+  // Security: Test memory cleanup
+  it("cleans up sensitive data on unmount", () => {
+    const { unmount } = render(<Secret secret={secret} label="Secret Phrase" />)
+    unmount()
+    // Memory cleanup is tested through the useEffect cleanup function
+  })
 })

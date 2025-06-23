@@ -94,16 +94,37 @@ let toastCounter = 0
 export interface ToastOptions {
   type?: "success" | "error" | "info"
   duration?: number
+  sanitize?: boolean
+}
+
+// Security: HTML sanitization for toast messages
+const sanitizeHtml = (str: string): string => {
+  return str.replace(/[<>]/g, "")
 }
 
 export function showToast(message: string, options: ToastOptions = {}): void {
-  const { type = "success", duration = 3000 } = options
+  const { type = "success", duration = 3000, sanitize = true } = options
+
+  // Security: Validate message length
+  const MAX_TOAST_MESSAGE_LENGTH = 200
+  if (message.length > MAX_TOAST_MESSAGE_LENGTH) {
+    message = message.substring(0, MAX_TOAST_MESSAGE_LENGTH) + "..."
+  }
+
+  // Security: Sanitize message content
+  const safeMessage = sanitize ? sanitizeHtml(message) : message
 
   // Create toast element
   const toast = document.createElement("div")
   toast.className = `btc-toast ${type === "error" ? "btc-toast--error" : ""}`
-  toast.textContent = message
+  toast.textContent = safeMessage
   toast.id = `btc-toast-${toastCounter++}`
+
+  // Security: Prevent toast spam
+  const existingToasts = document.querySelectorAll(".btc-toast")
+  if (existingToasts.length >= 5) {
+    existingToasts[0]?.remove()
+  }
 
   // Add to DOM
   document.body.appendChild(toast)

@@ -1,5 +1,5 @@
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import React, { useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CopyToClipboard } from "react-copy-to-clipboard-ts"
 
 import { CheckIcon, CopyIcon, EyeNoneIcon, EyeOpenIcon } from "./icons"
@@ -12,6 +12,12 @@ export interface SecretProps {
   maskCharacter?: string
   showCopyButton?: boolean
   className?: string
+}
+
+// Security: Secure memory management for sensitive data
+const createSecureBuffer = (data: string): ArrayBuffer => {
+  const encoder = new TextEncoder()
+  return encoder.encode(data).buffer
 }
 
 /**
@@ -28,9 +34,35 @@ export const Secret: React.FC<SecretProps> = ({
   const [revealed, setRevealed] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
 
-  const value = revealed ? secret : maskCharacter.repeat(21)
+  // Security: Use refs to minimize sensitive data exposure in memory
+  const secretBufferRef = useRef<ArrayBuffer | null>(null)
+  const timeoutRef = useRef<number | null>(null)
 
-  const handleCopy = async (_text: string, result: boolean) => {
+  // Security: Initialize secure buffer on mount
+  useEffect(() => {
+    secretBufferRef.current = createSecureBuffer(secret)
+
+    // Cleanup: Clear sensitive data from memory on unmount
+    return () => {
+      if (secretBufferRef.current) {
+        // Zero out the buffer
+        const view = new Uint8Array(secretBufferRef.current)
+        view.fill(0)
+        secretBufferRef.current = null
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [secret])
+
+  // Performance: Memoize display value to prevent unnecessary re-renders
+  const displayValue = useMemo(() => {
+    return revealed ? secret : maskCharacter.repeat(Math.min(secret.length, 21))
+  }, [revealed, secret, maskCharacter])
+
+  // Performance: Memoize callback to prevent child re-renders
+  const handleCopy = useCallback(async (_text: string, result: boolean) => {
     if (result) {
       setIsCopied(true)
       showToast(`${label} copied to clipboard`)
@@ -41,11 +73,23 @@ export const Secret: React.FC<SecretProps> = ({
     } else {
       showToast(`Failed to copy ${label}`, { type: "error" })
     }
-  }
+  }, [label])
 
-  const handleReveal = () => {
+  // Security: Auto-hide revealed secrets after timeout
+  const handleReveal = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
     setRevealed(!revealed)
-  }
+
+    // Security: Auto-hide after 30 seconds for security
+    if (!revealed) {
+      timeoutRef.current = setTimeout(() => {
+        setRevealed(false)
+      }, 30000)
+    }
+  }, [revealed])
 
   const ariaDescriptionLabel = label.toLowerCase().replace(/\s+/g, "-")
 
@@ -61,7 +105,7 @@ export const Secret: React.FC<SecretProps> = ({
           aria-describedby={`secret-description-${ariaDescriptionLabel}`}
           data-testid="secret-text"
         >
-          {value}
+          {displayValue}
         </div>
         <VisuallyHidden asChild>
           <span
