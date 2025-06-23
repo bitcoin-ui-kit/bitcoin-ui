@@ -1,5 +1,5 @@
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import React, { forwardRef, useCallback, useEffect, useState } from "react"
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from "react"
 
 import type { Currency, Locale } from "./utils"
 import { formatCurrencyValue, isValidAmount } from "./utils"
@@ -23,6 +23,13 @@ export interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLI
   label?: string
 }
 
+// Security: Input validation constants
+const MAX_INPUT_LENGTH = 20
+const ALLOWED_CHARS_REGEX = /^[0-9.,]*$/
+
+// Performance: Pre-compile regex patterns
+const LEADING_ZEROS_REGEX = /^0\d+$/
+
 /**
  * CurrencyInput component wraps the input and prefixes the field with a
  * static currency symbol. Useful for forms that accept currency values.
@@ -42,6 +49,12 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     ...props
   }, ref) => {
     const locale = rawLocale ?? (currency === "EUR" ? "EU" : "US")
+
+    // Security: Validate currency and locale inputs
+    const validCurrencies: Currency[] = ["BTC", "USD", "EUR"]
+    if (!validCurrencies.includes(currency)) {
+      throw new Error(`Invalid currency: ${currency}`)
+    }
     const isControlled = value !== undefined
 
     const formatNumber = useCallback(
@@ -53,6 +66,12 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       },
       [locale],
     )
+
+    // Performance: Memoize currency symbol to prevent lookups
+    const currencySymbol = useMemo(() => CURRENCY_SYMBOLS[currency], [currency])
+
+    // Performance: Memoize placeholder to prevent lookups
+    const placeholderText = useMemo(() => placeholder ?? CURRENCY_PLACEHOLDERS[currency], [placeholder, currency])
 
     const [internal, setInternal] = useState<string>(() => {
       const initial = isControlled
@@ -69,13 +88,23 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     }, [value, isControlled, formatNumber])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Security: Input length validation
+      if (e.target.value.length > MAX_INPUT_LENGTH) {
+        return
+      }
+
+      // Security: Character whitelist validation
+      if (!ALLOWED_CHARS_REGEX.test(e.target.value)) {
+        return
+      }
+
       const rawInput = e.target.value.replace(
         locale === "EU" ? /\./g : /,/g,
         "",
       )
 
       // Prevent leading zeros (e.g., 0100 -> should be 100)
-      if (/^0\d+$/.test(rawInput)) {
+      if (LEADING_ZEROS_REGEX.test(rawInput)) {
         return
       }
 
@@ -121,7 +150,7 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         )}
 
         <span className="btc-currency__symbol" aria-hidden="true">
-          {CURRENCY_SYMBOLS[currency]}
+          {currencySymbol}
         </span>
 
         <input
