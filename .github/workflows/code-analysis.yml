@@ -65,27 +65,33 @@ jobs:
       - name: Apply patches
         if: steps.check-pr.outputs.skip_assessment == 'false' && steps.assess.outputs.hadChanges == 'true'
         run: |
-          echo "Applying patches from file..."
+          echo "Downloading and applying patch from URL..."
           
-          if [ ! -f "$PATCH_FILE" ]; then
-            echo "Error: Patch file not found: $PATCH_FILE"
+          if [ -z "$PATCH_URL" ]; then
+            echo "Error: Patch URL not found"
             exit 1
           fi
           
-          echo "Patch file size: $(wc -c < $PATCH_FILE) bytes"
-          echo "Patch content preview:"
-          head -20 "$PATCH_FILE"
+          echo "Patch URL: $PATCH_URL"
           
-          # Apply the patch from file
-          git apply --reject --verbose --whitespace=fix "$PATCH_FILE" || {
-            echo "Failed to apply patch. Full patch content:"
-            cat "$PATCH_FILE"
+          # Download and apply the patch directly
+          curl -s "$PATCH_URL" > remote-patch.patch && git apply --check remote-patch.patch
+          
+          if [ $? -eq 0 ]; then
+            echo "Patch validation successful, applying..."
+            git apply --reject --verbose --whitespace=fix remote-patch.patch
+          else
+            echo "Patch validation failed. Patch content:"
+            curl -s "$PATCH_URL"
             echo "Git status:"
             git status
             exit 1
-          }
+          fi
+          
+          # Clean up the temporary patch file
+          rm -f remote-patch.patch
         env:
-          PATCH_FILE: ${{ steps.assess.outputs.patchFile }}
+          PATCH_URL: ${{ steps.assess.outputs.patchUrl }}
 
       - name: Commit & PR
         if: steps.check-pr.outputs.skip_assessment == 'false' && steps.assess.outputs.hadChanges == 'true'
