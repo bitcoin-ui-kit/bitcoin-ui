@@ -4,7 +4,7 @@
 import fs from "node:fs"
 import process from "node:process"
 
-import { createAgent } from "openagentic"
+import { anthropicTool, createAgent, geminiTool, githubTool, openaiTool } from "openagentic"
 
 /**
  * Pretend AI assessment that always returns:
@@ -19,7 +19,7 @@ async function runAssessment() {
       additionalPaths: ["src/components", "src/components/__tests__"],
       provideDiff: true,
     },
-    // tools: ["github_contents", "anthropic_chat", "gemini_chat", "openai_text_generation"],
+    tools: [githubTool, anthropicTool, geminiTool, openaiTool],
     enableDebugLogging: true,
     logLevel: "basic",
     maxIterations: 15, // Allow more iterations for complex orchestrators
