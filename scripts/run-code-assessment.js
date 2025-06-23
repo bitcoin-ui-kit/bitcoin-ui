@@ -24,7 +24,7 @@ async function runAssessment() {
     logLevel: "basic",
     maxIterations: 15, // Allow more iterations for complex orchestrators
   })
-  const result = await agent.run("Please analyze the Bitcoin UI repository at https://github.com/bitcoin-ui-kit/bitcoin-ui and provide a comprehensive code assessment report.")
+  const result = await agent.execute("Please analyze the Bitcoin UI repository at https://github.com/bitcoin-ui-kit/bitcoin-ui and provide a comprehensive code assessment report.")
   console.log("result", result)
   console.log("result.result", result.result)
   const parsedResult = typeof result.result === "string" ? JSON.parse(result.result) : result.result
