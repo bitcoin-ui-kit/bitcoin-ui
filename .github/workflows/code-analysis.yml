@@ -1,8 +1,12 @@
-
 # This workflow is used to run the OpenAgentic assessment on the codebase.
 # It creates a pull request with the changes made by the OpenAgentic assessment.
 
 name: AI-Code-Analysis
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
 
 on:
   pull_request:
@@ -11,37 +15,90 @@ on:
 jobs:
   ai-pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with: { node-version: '18' }
+      - name: Enable corepack
+        run: corepack enable
 
-      - run: npm ci
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.7
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for existing PR
+        id: check-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a PR exists from ai/code-improve branch
+          existing_pr=$(gh pr list --head ai/code-improve --state open --json number --jq '.[0].number // empty')
+          
+          if [ -n "$existing_pr" ]; then
+            echo "Found existing PR #$existing_pr from ai/code-improve branch"
+            echo "skip_assessment=true" >> $GITHUB_OUTPUT
+          else
+            echo "No existing PR found from ai/code-improve branch"
+            echo "skip_assessment=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run OpenAgentic assessment
         id: assess
+        if: steps.check-pr.outputs.skip_assessment == 'false'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAGENTIC_API_KEY: ${{ secrets.OPENAGENTIC_API_KEY }}
+          MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           node scripts/run-code-assessment.js
 
       - name: Apply patches
-        if: steps.assess.outputs.hadChanges == 'true'
+        if: steps.check-pr.outputs.skip_assessment == 'false' && steps.assess.outputs.hadChanges == 'true'
         run: |
-          echo "$PATCHES" | git apply --whitespace=fix
+          echo "Downloading and applying patch from URL..."
+          
+          if [ -z "$PATCH_URL" ]; then
+            echo "Error: Patch URL not found"
+            exit 1
+          fi
+          
+          echo "Patch URL: $PATCH_URL"
+          
+          # Download and apply the patch directly
+          curl -s "$PATCH_URL" > remote-patch.patch && git apply --check remote-patch.patch
+          
+          if [ $? -eq 0 ]; then
+            echo "Patch validation successful, applying..."
+            git apply --reject --verbose --whitespace=fix remote-patch.patch
+          else
+            echo "Patch validation failed. Patch content:"
+            curl -s "$PATCH_URL"
+            echo "Git status:"
+            git status
+            exit 1
+          fi
+          
+          # Clean up the temporary patch file
+          rm -f remote-patch.patch
         env:
-          PATCHES: ${{ steps.assess.outputs.patchString }}
+          PATCH_URL: ${{ steps.assess.outputs.patchUrl }}
 
       - name: Commit & PR
-        if: steps.assess.outputs.hadChanges == 'true'
+        if: steps.check-pr.outputs.skip_assessment == 'false' && steps.assess.outputs.hadChanges == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ai/code-improve-${{ github.run_id }}
+          branch: ai/code-improve
           title: "AI: automated code improvements"
           body: ${{ steps.assess.outputs.prBody }}
+          base: ${{ github.head_ref || github.ref_name }}
