@@ -21,8 +21,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       openagentic:
-        specifier: ^2.1.21
-        version: 2.1.21(react@18.3.1)
+        specifier: ^2.1.22
+        version: 2.1.22(react@18.3.1)
       qrcode.react:
         specifier: ^4.1.0
         version: 4.2.0(react@18.3.1)
@@ -5187,8 +5187,8 @@ packages:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
 
-  openagentic@2.1.21:
-    resolution: {integrity: sha512-LwGLC0U0aHnpznbDewB41+a0MDvOGlq/TtbnREJ+8ODgirlXQOYOlQJvC+Bex8cfSDLHwlK6EPX7iXJSpWmGeQ==}
+  openagentic@2.1.22:
+    resolution: {integrity: sha512-y/KEHX6rgTFgwNG2UUZ3xu8l4RlHFqGz3x0OzbRw/K/qi8iuFJg8B1k8ZhJXwZ56uF98MKbqkkaq7YAxrn9ilg==}
     engines: {node: '>=18.0.0'}
 
   optionator@0.9.4:
@@ -13053,7 +13053,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openagentic@2.1.21(react@18.3.1):
+  openagentic@2.1.22(react@18.3.1):
     dependencies:
       '@ai-sdk/amazon-bedrock': 2.2.10(zod@3.25.67)
       '@ai-sdk/anthropic': 1.2.12(zod@3.25.67)

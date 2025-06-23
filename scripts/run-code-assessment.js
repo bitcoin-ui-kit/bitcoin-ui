@@ -100,11 +100,39 @@ async function runAssessment() {
   const parsedResult = typeof result.result === "string" ? JSON.parse(result.result) : result.result
   console.log("prDiff", parsedResult.prDiff)
 
-  const rawPatch = parsedResult.prDiff?.content
+  const patchUrl = parsedResult.prDiff?.url
   const reportUrl = parsedResult.reportUrl
 
-  console.log("Raw patch content:", rawPatch)
-  console.log("reportUrl", reportUrl)
+  console.log("Patch URL:", patchUrl)
+  console.log("Report URL:", reportUrl)
+
+  let rawPatch = null
+  if (patchUrl) {
+    try {
+      console.log("Fetching patch from URL:", patchUrl)
+      const response = await fetch(patchUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch patch: ${response.status} ${response.statusText}`)
+      }
+      rawPatch = await response.text()
+      console.log("Successfully fetched patch content")
+      console.log("Raw patch content preview:", rawPatch.substring(0, 500))
+    } catch (error) {
+      console.error("Error fetching patch from URL:", error)
+      return {
+        patch: null,
+        hadChanges: false,
+        prBody: `### 🧹 Automated code assessment\nFailed to fetch patch from URL: ${patchUrl}\nError: ${error.message}\nReport: ${reportUrl}\n`,
+      }
+    }
+  } else {
+    console.warn("No patch URL found in assessment result")
+    return {
+      patch: null,
+      hadChanges: false,
+      prBody: `### 🧹 Automated code assessment\nNo patch URL found in assessment result.\nReport: ${reportUrl}\n`,
+    }
+  }
 
   // Clean and validate the patch
   const cleanedPatch = cleanPatch(rawPatch)
