@@ -16,14 +16,22 @@ function cleanPatch(patch) {
   }
 
   try {
+    console.log("Raw patch input preview:", patch.substring(0, 500))
+
+    // Remove markdown code fences and language identifiers
+    let cleanedPatch = patch
+      .replace(/^```\w*\s*\n/m, "") // Remove opening code fence with optional language
+      .replace(/\n```\s*$/m, "") // Remove closing code fence
+      .trim()
+
     // Split into lines for processing
-    const lines = patch.split("\n")
+    const lines = cleanedPatch.split("\n")
 
     // Remove trailing whitespace from each line
     const cleanedLines = lines.map(line => line.trimEnd())
 
     // Join back together
-    let cleanedPatch = cleanedLines.join("\n")
+    cleanedPatch = cleanedLines.join("\n")
 
     // Ensure the patch ends with a newline
     if (!cleanedPatch.endsWith("\n")) {
@@ -57,7 +65,7 @@ function cleanPatch(patch) {
 
     console.log("Patch validated and cleaned successfully")
     console.log(`Patch size: ${cleanedPatch.length} characters, ${lines.length} lines`)
-    console.log(`Patch preview (first 500 chars):\n${cleanedPatch.substring(0, 500)}...`)
+    console.log(`Cleaned patch preview (first 500 chars):\n${cleanedPatch.substring(0, 500)}...`)
 
     return cleanedPatch
   } catch (error) {
