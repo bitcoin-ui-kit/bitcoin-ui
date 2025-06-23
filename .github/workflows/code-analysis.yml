@@ -36,6 +36,8 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAGENTIC_API_KEY: ${{ secrets.OPENAGENTIC_API_KEY }}
+          MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
           node scripts/run-code-assessment.js
 
