@@ -4,8 +4,6 @@
 import fs from "node:fs"
 import process from "node:process"
 
-import { anthropicTool, createAgent, geminiTool, githubTool, openaiTool } from "openagentic"
-
 /**
  * Clean and validate a git patch to ensure it can be applied successfully
  */
@@ -80,31 +78,33 @@ function cleanPatch(patch) {
  *  • a short, friendly PR body
  */
 async function runAssessment() {
-  const agent = createAgent({
-    model: "gpt-4o-mini", // Use consistent model for testing
-    orchestrator: "code_assessment",
-    orchestratorParams: {
-      additionalPaths: ["src/components", "src/components/__tests__"],
-      provideDiff: true,
-    },
-    tools: [githubTool, anthropicTool, geminiTool, openaiTool],
-    enableDebugLogging: true,
-    logLevel: "basic",
-    maxIterations: 15, // Allow more iterations for complex orchestrators
-  })
+  // const agent = createAgent({
+  //   model: "gpt-4o-mini", // Use consistent model for testing
+  //   orchestrator: "code_assessment",
+  //   orchestratorParams: {
+  //     additionalPaths: ["src/components", "src/components/__tests__"],
+  //     provideDiff: true,
+  //   },
+  //   tools: [githubTool, anthropicTool, geminiTool, openaiTool],
+  //   enableDebugLogging: true,
+  //   logLevel: "basic",
+  //   maxIterations: 15, // Allow more iterations for complex orchestrators
+  // })
 
-  const result = await agent.execute("Please analyze the Bitcoin UI repository at https://github.com/bitcoin-ui-kit/bitcoin-ui and provide a comprehensive code assessment report.")
-  console.log("result", result)
-  console.log("result.result", result.result)
+  // const result = await agent.execute("Please analyze the Bitcoin UI repository at https://github.com/bitcoin-ui-kit/bitcoin-ui and provide a comprehensive code assessment report.")
+  // console.log("result", result)
+  // console.log("result.result", result.result)
 
-  const parsedResult = typeof result.result === "string" ? JSON.parse(result.result) : result.result
-  console.log("prDiff", parsedResult.prDiff)
+  // const parsedResult = typeof result.result === "string" ? JSON.parse(result.result) : result.result
+  // console.log("prDiff", parsedResult.prDiff)
 
-  const patchUrl = parsedResult.prDiff?.url
-  const reportUrl = parsedResult.reportUrl
+  // const patchUrl = parsedResult.prDiff?.url
+  // const reportUrl = parsedResult.reportUrl
 
-  console.log("Patch URL:", patchUrl)
-  console.log("Report URL:", reportUrl)
+  // console.log("Patch URL:", patchUrl)
+  // console.log("Report URL:", reportUrl)
+  const patchUrl = "https://signschool.s3.us-east-1.amazonaws.com/openagentic/websites/code-assessment-diff-bitcoin-ui-kit-bitcoin-ui-2025-06-23T15-11-18-638Z.txt"
+  const reportUrl = "https://signschool.s3.us-east-1.amazonaws.com/openagentic/websites/page_code-assessment-bitcoin-ui-kit-bitcoin-ui_2025-06-23_15-11-18-830_eayxzj.html"
 
   let rawPatch = null
   if (patchUrl) {
