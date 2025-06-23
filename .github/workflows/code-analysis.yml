@@ -31,8 +31,25 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Check for existing PR
+        id: check-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a PR exists from ai/code-improve branch
+          existing_pr=$(gh pr list --head ai/code-improve --state open --json number --jq '.[0].number // empty')
+          
+          if [ -n "$existing_pr" ]; then
+            echo "Found existing PR #$existing_pr from ai/code-improve branch"
+            echo "skip_assessment=true" >> $GITHUB_OUTPUT
+          else
+            echo "No existing PR found from ai/code-improve branch"
+            echo "skip_assessment=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run OpenAgentic assessment
         id: assess
+        if: steps.check-pr.outputs.skip_assessment == 'false'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
@@ -46,7 +63,7 @@ jobs:
           node scripts/run-code-assessment.js
 
       - name: Apply patches
-        if: steps.assess.outputs.hadChanges == 'true'
+        if: steps.check-pr.outputs.skip_assessment == 'false' && steps.assess.outputs.hadChanges == 'true'
         run: |
           echo "Applying patches from file..."
           
@@ -60,7 +77,7 @@ jobs:
           head -20 "$PATCH_FILE"
           
           # Apply the patch from file
-          git apply --verbose --whitespace=fix "$PATCH_FILE" || {
+          git apply --reject --verbose --whitespace=fix "$PATCH_FILE" || {
             echo "Failed to apply patch. Full patch content:"
             cat "$PATCH_FILE"
             echo "Git status:"
@@ -71,11 +88,11 @@ jobs:
           PATCH_FILE: ${{ steps.assess.outputs.patchFile }}
 
       - name: Commit & PR
-        if: steps.assess.outputs.hadChanges == 'true'
+        if: steps.check-pr.outputs.skip_assessment == 'false' && steps.assess.outputs.hadChanges == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ai/code-improve-${{ github.run_id }}
+          branch: ai/code-improve
           title: "AI: automated code improvements"
           body: ${{ steps.assess.outputs.prBody }}
           base: ${{ github.head_ref || github.ref_name }}
