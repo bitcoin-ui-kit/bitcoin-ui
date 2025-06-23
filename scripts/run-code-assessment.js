@@ -50,7 +50,7 @@ async function runAssessment() {
     // changes: [{ path: "README.md", patch }],
     patch: patch2,
     hadChanges: true,
-    prBody: `### 🧹 Automated README cleanup\nRemoved a dead link to \`src/example.tsx\` that no longer exists.\n`,
+    prBody: `### 🧹 Automated code assessment\nApply changes from the following code assessment report:\n${reportUrl}\n`,
   }
 }
 
