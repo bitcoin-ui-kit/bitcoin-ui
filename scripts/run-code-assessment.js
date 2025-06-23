@@ -103,7 +103,7 @@ async function runAssessment() {
 
   // console.log("Patch URL:", patchUrl)
   // console.log("Report URL:", reportUrl)
-  const patchUrl = "https://signschool.s3.us-east-1.amazonaws.com/openagentic/websites/code-assessment-diff-bitcoin-ui-kit-bitcoin-ui-2025-06-23T15-11-18-648Z.txt"
+  const patchUrl = "https://signschool.s3.us-east-1.amazonaws.com/openagentic/websites/code-assessment-diff-bitcoin-ui-kit-bitcoin-ui-2025-06-23T15-11-18-658Z.txt"
   const reportUrl = "https://signschool.s3.us-east-1.amazonaws.com/openagentic/websites/page_code-assessment-bitcoin-ui-kit-bitcoin-ui_2025-06-23_15-11-18-830_eayxzj.html"
 
   let rawPatch = null
